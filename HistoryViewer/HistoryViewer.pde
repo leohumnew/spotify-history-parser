@@ -1,13 +1,15 @@
 JSONArray listenHistory;
 JSONObject song;
-int totalListenTime = 0, temp = 0, temp2 = 0, mouseHover = 0, selected = 0, screen = 1;
+int totalListenTime = 0, temp = 0, temp2 = 0, mouseHover = 0, selected = 0, screen = 0, page = 0, lastPage = 3;
 int m1 = 1, y1 = 2020, m2 = 1, y2 = 2021;
 String tempText = "";
 String[] mostPlayedSongs, mostListenedHours;
 IntDict songsList = new IntDict(), timesList = new IntDict();
+StringDict artistList = new StringDict();
 
 PImage bg, reload;
 PFont font;
+String selection = "null";
 
 boolean loaded = false;
 
@@ -22,8 +24,8 @@ void setup() {
   textFont(font);
   fill(#1ed760);
   noStroke();
-  listenHistory = loadJSONArray("StreamingHistory0.json");
-  //loadStats(m1, y1, m2, y2);
+  selectInput("Select your 'StreamingHistory.json' file:", "fileSelected");
+  //listenHistory = loadJSONArray("StreamingHistory0.json");
 }
 
 // DRAW -----------------------------------------------------------------------------------
@@ -50,11 +52,12 @@ void draw() {
     }
     if (mouseY<height/5.4 && mouseX<width/4 && mouseY > height/8 && mouseX > width/6) {
       mouseHover=5;
-      image(reload, width/4.6, height/6.5, 45, 45);
+      image(reload, width/4.6, height/6.5, 40, 40);
     } else image(reload, width/4.6, height/6.5, 35, 35);
     fill(#1ed760);
     text(">", width/2*1.17, height/6.5);
 
+    //Menu --------------------------------------------
     if (screen == 0) {
       if (mouseY < height/1.9 && mouseY > height/2.2 && mouseX < width/4*3 && mouseX > width/4) {
         mouseHover = 6;
@@ -62,7 +65,6 @@ void draw() {
         mouseHover = 7;
       }
 
-      //Menu
       fill(#1ed760, 90);
       rect(width/2, height/3.38, width/1.3, height/15, 20, 20, 0, 0);
       if (mouseHover!=6)rect(width/2, height/2.007, width/3, height/18, 0, 0, 20, 20);
@@ -87,22 +89,91 @@ void draw() {
       text("Hours with most listens: "+ nf(int(mostListenedHours[0]), 2, 0)+" & "+nf(int(mostListenedHours[1]), 2, 0), width/2, height/1.41);
       if (mouseHover!=7)text("MORE", width/2, height/1.2);
       else text("MORE", width/2, height/1.195);
-      
-      //Songs played
-    } else if (screen == 1){
-      fill(#1ed760, 50);
-      rect(width/2.45, height/3.38, width/1.8, height/10, 20, 0, 0, 20);
+
+      //Songs played ------------------------------------
+    } else if (screen == 1) {
+      for (int i = 0; i < 6; i++) {
+        if (mostPlayedSongs[i+6*page]!=null)drawSongBox(height/3.5+i*height/9, i);
+      }
+
       fill(#1ed760, 90);
-      rect(width/1.3, height/3.38, width/6, height/10, 0, 20, 20, 0);
+      if (mouseY > height/1.4 && mouseX < width/5*3 && mouseX > width/5*2) {
+        rect(width/2, height/1.05, width/5.5, height/15, 20);
+        mouseHover = 8;
+      } else rect(width/2, height/1.05, width/6, height/17, 20);
+
+      if (mouseY > height/4.4 && mouseX > width/1.17 && mouseY < height/3.4 && page!=0) {
+        rect(width/1.11, height/3.85, width/14, width/14, 15);
+        mouseHover = 9;
+      } else rect(width/1.11, height/3.85, width/16, width/16, 15);
+      if (mouseY > height/3.4 && mouseX > width/1.17 && mouseY < height/3 && page!=0) {
+        rect(width/1.11, height/3.17, width/14, width/14, 15);
+        mouseHover = 12;
+      } else rect(width/1.11, height/3.17, width/16, width/16, 15);
+
+      if (mouseY > height/1.18 && mouseX > width/1.17 && mouseY < height/1.08 && page!=lastPage) {
+        rect(width/1.11, height/1.151, width/14, width/14, 15);
+        mouseHover = 10;
+      } else rect(width/1.11, height/1.151, width/16, width/16, 15);
+      if (mouseY > height/1.3 && mouseX > width/1.17 && mouseY < height/1.18 && page!=lastPage) {
+        rect(width/1.11, height/1.23, width/14, width/14, 15);
+        mouseHover = 11;
+      } else rect(width/1.11, height/1.23, width/16, width/16, 15);
+
+      fill(50);
+      text("BACK", width/2, height/1.054);
+      text((page+1)+"/"+(lastPage+1), width/1.31, height/1.1);
+
+      if (page==0) fill(#258929);
+      text("^", width/1.11, height/3.8);
+      text("^", width/1.11, height/3.08);
+      text("^", width/1.11, height/3.23);
+
+      if (page!=lastPage) fill(50);
+      else fill(#258929);
+      text("v", width/1.11, height/1.16);
+      text("v", width/1.11, height/1.225);
+      text("v", width/1.11, height/1.25);
     }
-    
+
     //If not yet loaded data
   } else {
-    text("Loading...", width/2, height/2);
-    loadStats(m1, y1, m2, y2);
+    if (selection.equals("null")) {
+      text("Select your 'StreamingHistory.json' file", width/2, height/2);
+    } else {
+      text("Loading...", width/2, height/2);
+      listenHistory = loadJSONArray(selection);
+      loadStats(m1, y1, m2, y2);
+    }
   }
 }
 
+//File selection check
+void fileSelected(File selected) {
+  if (selected == null || !selected.getAbsolutePath().substring(selected.getAbsolutePath().length()-4, selected.getAbsolutePath().length()).equals("json")) {
+    exit();
+  } else {
+    selection=selected.getAbsolutePath();
+  }
+}
+
+//Draw song boxes
+void drawSongBox(float h, int p) {
+  fill(#1ed760, 50);
+  rect(width/2.45, h, width/1.8, height/10, 20, 0, 0, 20);
+  fill(#1ed760, 90);
+  rect(width/1.3, h, width/6, height/10, 0, 20, 20, 0);
+  fill(50);
+  if (mostPlayedSongs[p+6*page].length()<23)text(mostPlayedSongs[p+6*page], width/2.45, h-10);
+  else text(mostPlayedSongs[p+6*page].substring(0, 21)+"...", width/2.45, h-10);
+  textSize(15);
+  text(artistList.get(mostPlayedSongs[p+6*page]), width/2.45, h+15);
+  textSize(35);
+  text(songsList.get(mostPlayedSongs[p+6*page]), width/1.3, h-3);
+  textSize(25);
+}
+
+//Draw main date buttons
 void drawDateButtons(int x) {
   switch(x) {
   case 1:
@@ -218,13 +289,35 @@ void mousePressed() {
     }
     selected = 0;
   } else if (mouseHover == 5) {
+    if (selected!=0) {
+      switch(selected) {
+      case 1:
+        m1=int(tempText);
+        break;
+      case 2:
+        y1=int(tempText);
+        break;
+      case 3:
+        m2=int(tempText);
+        break;
+      case 4:
+        y2=int(tempText);
+        break;
+      }
+      tempText = "";
+      selected = 0;
+    }
     loaded = false;
     loadStats(m1, y1, m2, y2);
-  } else if (mouseHover == 6) {
-    screen = 1;
-  } else if (mouseHover == 7) {
-    screen = 2;
-  }
+  } else if (mouseHover == 6) screen = 1;
+  else if (mouseHover == 7) screen = 2;
+  else if (mouseHover == 8) {
+    page = 0;
+    screen = 0;
+  } else if (mouseHover == 9) page --;
+  else if (mouseHover == 10) page ++;
+  else if (mouseHover == 11) page = lastPage;
+  else if (mouseHover == 12) page = 0;
 }
 
 // KEY PRESSED ----------------------------------------------------------------------------
@@ -271,9 +364,10 @@ void loadStats(int a, int b, int c, int d) {
   for (int i = start; i <= end; i++) {
     song = listenHistory.getJSONObject(i);
     totalListenTime += song.getInt("msPlayed");
-    if (song.getInt("msPlayed")>1000) {
+    if (song.getInt("msPlayed")>5000) {
       timesList.add(song.getString("endTime").substring(11, 13), 1);
       songsList.add(song.getString("trackName"), 1);
+      artistList.set(song.getString("trackName"), song.getString("artistName"));
     }
   }
 
@@ -285,6 +379,8 @@ void loadStats(int a, int b, int c, int d) {
 
   timesList.sortValuesReverse();
   mostListenedHours = timesList.keyArray();
+
+  lastPage = ceil(songsList.size()/6)-1;
 
   loaded = true;
 }
