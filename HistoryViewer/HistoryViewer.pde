@@ -1,11 +1,18 @@
+//----------------------//
+//|                    |//
+//|    LEO NEWMAN      |//
+//|                    |//
+//----------------------//
+
 JSONArray listenHistory;
 JSONObject song;
-int totalListenTime = 0, temp = 0, temp2 = 0, mouseHover = 0, selected = 0, screen = 0, page = 0, lastPage = 3;
-int m1 = 1, y1 = 2020, m2 = 1, y2 = 2021;
+int totalListenTime = 0, temp = 0, temp2 = 0, mouseHover = 0, selected = 0, screen = 0, page = 0, lastPage = 3, monthHovered = -1;
+int m1 = 1, y1 = 2020, m2 = 1, y2 = 2021, monthMax = 0;
 String tempText = "";
-String[] mostPlayedSongs, mostListenedHours;
-IntDict songsList = new IntDict(), timesList = new IntDict();
+String[] mostPlayedSongs, mostListenedHours, monthKeys, months = {"","January","February","March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
+IntDict songsList = new IntDict(), timesList = new IntDict(), monthList = new IntDict(), timeSpentList = new IntDict();
 StringDict artistList = new StringDict();
+int[] timePerMonth;
 
 PImage bg, reload;
 PFont font;
@@ -24,8 +31,8 @@ void setup() {
   textFont(font);
   fill(#1ed760);
   noStroke();
+  //selection="StreamingHistory0.json";
   selectInput("Select your 'StreamingHistory.json' file:", "fileSelected");
-  //listenHistory = loadJSONArray("StreamingHistory0.json");
 }
 
 // DRAW -----------------------------------------------------------------------------------
@@ -85,8 +92,8 @@ void draw() {
       else text("MORE", width/2, height/2.02);
 
       text("Time and hours", width/2, height/1.57);
-      text(totalListenTime+"min / "+ nf(totalListenTime/60, 0, 1)+"hrs / "+nf(totalListenTime/60/24f, 0, 1)+"days", width/2, height/1.31);
-      text("Hours with most listens: "+ nf(int(mostListenedHours[0]), 2, 0)+" & "+nf(int(mostListenedHours[1]), 2, 0), width/2, height/1.41);
+      text(totalListenTime+" minutes listened in total!", width/2, height/1.41);
+      text("Hours with most listens: "+ nf(int(mostListenedHours[0]), 2, 0)+" & "+nf(int(mostListenedHours[1]), 2, 0), width/2, height/1.31);
       if (mouseHover!=7)text("MORE", width/2, height/1.2);
       else text("MORE", width/2, height/1.195);
 
@@ -97,7 +104,7 @@ void draw() {
       }
 
       fill(#1ed760, 90);
-      if (mouseY > height/1.4 && mouseX < width/5*3 && mouseX > width/5*2) {
+      if (mouseY > height/1.1 && mouseX < width/5*3 && mouseX > width/5*2) {
         rect(width/2, height/1.05, width/5.5, height/15, 20);
         mouseHover = 8;
       } else rect(width/2, height/1.05, width/6, height/17, 20);
@@ -134,9 +141,54 @@ void draw() {
       text("v", width/1.11, height/1.16);
       text("v", width/1.11, height/1.225);
       text("v", width/1.11, height/1.25);
+
+      //Time stats -------------------------------------
+    } else if (screen == 2) {
+      fill(#1ed760, 90);
+      rect(width/2, height/4, width/1.2, height/15, 20, 20, 0, 0);
+      rect(width/2, height/2, width/1.2, height/15, 20, 20, 0, 0);
+
+      if (mouseY > height/1.1 && mouseX < width/5*3 && mouseX > width/5*2) {
+        rect(width/2, height/1.05, width/5.5, height/15, 20);
+        mouseHover = 8;
+      } else rect(width/2, height/1.05, width/6, height/17, 20);
+
+      fill(#1ed760, 50);
+      rect(width/2, height/2.75, width/1.2, height/6.2, 0, 0, 20, 20);
+      rect(width/2, height/1.4, width/1.2, height/2.76, 0, 0, 20, 20);
+
+
+
+      fill(50);
+      stroke(20);
+      line(width/7, height/1.35, width/7*5/(monthKeys.length-1)*(monthKeys.length-1)+width/7, height/1.35);
+      textSize(15);
+      for (int i = 0; i < monthKeys.length; i++) {
+        stroke(#1ed760, 200);
+        if (i!=monthKeys.length-1)line(width/7*5/(monthKeys.length-1)*i+width/7, height/1.35-map(monthList.get(monthKeys[i]), 0, monthMax, 5, height/5.6), width/7*5/(monthKeys.length-1)*(i+1)+width/7, height/1.35-map(monthList.get(monthKeys[i+1]), 0, monthMax, 5, height/5.6));
+        stroke(50);
+        line(width/7*5/(monthKeys.length-1)*i+width/7, height/1.36, width/7*5/(monthKeys.length-1)*i+width/7, height/1.34);
+        text(months[int(monthKeys[i].substring(5, 7))].substring(0,3), width/7*5/(monthKeys.length-1)*i+width/7, height/1.32);
+        circle(width/7*5/(monthKeys.length-1)*i+width/7, height/1.35-map(monthList.get(monthKeys[i]), 0, monthMax, 5, height/5.6), 5);
+        text(monthList.get(monthKeys[i]), width/7*5/(monthKeys.length-1)*i+width/7, height/1.35-map(monthList.get(monthKeys[i]), 0, monthMax, 5, height/5.6)-15);
+      }
+      noStroke();
+      textSize(25);
+
+      if(mouseY>height/1.9 && mouseY < height/1.2 && mouseX > width/7 && mouseX < width/7*6){
+        monthHovered = round(map(mouseX,width/7,width/7*6,0,monthKeys.length-1));
+      } else monthHovered = -1;
+
+      if(monthHovered!=-1)text(timePerMonth[monthHovered]/1000/60+" minutes in "+months[int(monthKeys[monthHovered].substring(5,7))]+" "+monthKeys[monthHovered].substring(0,4), width/2,height/1.2);
+      else text("Hover over a month for more info!", width/2,height/1.2);
+      text("Total listening time:", width/2, height/4.02);
+      text(totalListenTime+" minutes\n"+ nf(totalListenTime/60f, 0, 1)+" hours\n"+nf(totalListenTime/60/24f, 0, 1)+" days", width/2, height/2.8);
+      text("Songs listened to per month:", width/2, height/2.02);
+
+      text("BACK", width/2, height/1.054);
     }
 
-    //If not yet loaded data
+    //If not yet loaded data ---------------------------
   } else {
     if (selection.equals("null")) {
       text("Select your 'StreamingHistory.json' file", width/2, height/2);
@@ -309,9 +361,13 @@ void mousePressed() {
     }
     loaded = false;
     loadStats(m1, y1, m2, y2);
-  } else if (mouseHover == 6) screen = 1;
-  else if (mouseHover == 7) screen = 2;
-  else if (mouseHover == 8) {
+  } else if (mouseHover == 6) {
+    screen = 1;
+    lastPage = ceil(songsList.size()/6)-1;
+  } else if (mouseHover == 7) {
+    screen = 2;
+    lastPage = ceil(monthList.size()/6)-1;
+  } else if (mouseHover == 8) {
     page = 0;
     screen = 0;
   } else if (mouseHover == 9) page --;
@@ -336,6 +392,9 @@ void loadStats(int a, int b, int c, int d) {
   totalListenTime = 0;
   songsList.clear();
   timesList.clear();
+  monthList.clear();
+  timeSpentList.clear();
+  monthKeys = null;
 
   //FIND RANGE INDEXES
   //Find range start
@@ -350,7 +409,7 @@ void loadStats(int a, int b, int c, int d) {
     temp++;
   }
   //Find range end
-  temp = 0;
+  temp = start;
   while (temp < listenHistory.size() && temp >= 0) {
     song = listenHistory.getJSONObject(temp);
     if (int(song.getString("endTime").substring(0, 4))>d || (int(song.getString("endTime").substring(0, 4))==d && int(song.getString("endTime").substring(5, 7))>c)) {
@@ -361,13 +420,18 @@ void loadStats(int a, int b, int c, int d) {
   }
   if (temp >= 0)end = listenHistory.size()-1;
 
+
+
+  //Cycle songs
   for (int i = start; i <= end; i++) {
     song = listenHistory.getJSONObject(i);
     totalListenTime += song.getInt("msPlayed");
+    timeSpentList.add(song.getString("endTime").substring(0, 7),song.getInt("msPlayed"));
     if (song.getInt("msPlayed")>5000) {
       timesList.add(song.getString("endTime").substring(11, 13), 1);
       songsList.add(song.getString("trackName"), 1);
       artistList.set(song.getString("trackName"), song.getString("artistName"));
+      monthList.increment(song.getString("endTime").substring(0, 7));
     }
   }
 
@@ -380,7 +444,10 @@ void loadStats(int a, int b, int c, int d) {
   timesList.sortValuesReverse();
   mostListenedHours = timesList.keyArray();
 
-  lastPage = ceil(songsList.size()/6)-1;
+  monthKeys = monthList.keyArray();
+  monthMax = max(monthList.valueArray());
+  timePerMonth = timeSpentList.valueArray();
+  println(monthKeys);
 
   loaded = true;
 }
