@@ -9,12 +9,12 @@ JSONObject song;
 int totalListenTime = 0, temp = 0, temp2 = 0, mouseHover = 0, selected = 0, screen = 0, page = 0, lastPage = 3, monthHovered = -1;
 int m1 = 1, y1 = 2020, m2 = 1, y2 = 2021, monthMax = 0;
 String tempText = "";
-String[] mostPlayedSongs, mostListenedHours, monthKeys, months = {"","January","February","March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
+String[] mostPlayedSongs, mostListenedHours, monthKeys, months = {"", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
 IntDict songsList = new IntDict(), timesList = new IntDict(), monthList = new IntDict(), timeSpentList = new IntDict();
 StringDict artistList = new StringDict();
 int[] timePerMonth;
 
-PImage bg, reload;
+PImage bg, reload, up, up2, down, down2;
 PFont font;
 String selection = "null";
 
@@ -27,12 +27,16 @@ void setup() {
   reload = loadImage("reload.png");
   textAlign(CENTER, CENTER);
   imageMode(CENTER);
-  font = createFont("ARLRDBD.TTF", 25);
+  font = createFont("Gotham-MediumChanged.otf", 25);
   textFont(font);
   fill(#1ed760);
   noStroke();
   //selection="StreamingHistory0.json";
   selectInput("Select your 'StreamingHistory.json' file:", "fileSelected");
+  up = loadImage("up1.png");
+  up2 = loadImage("up2.png");
+  down = loadImage("down1.png");
+  down2 = loadImage("down2.png");
 }
 
 // DRAW -----------------------------------------------------------------------------------
@@ -84,10 +88,12 @@ void draw() {
       rect(width/2, height/2.5, width/1.3, height/7, 0, 0, 20, 20);
       rect(width/2, height/1.35, width/1.3, height/7, 0, 0, 20, 20);
 
-      fill(55);
+      fill(255);
       text("Most played songs", width/2, height/3.4);
-      if (mostPlayedSongs[0].length() < 34)text(mostPlayedSongs[0] + "\n" + songsList.get(mostPlayedSongs[0]) + " times!", width/2, height/2.55);
-      else text(mostPlayedSongs[0].substring(0, 31) + "...\n" + songsList.get(mostPlayedSongs[0]) + " times!", width/2, height/2.55);
+      if (mostPlayedSongs[0].length() < 34) {
+        text(mostPlayedSongs[0], width/2, height/2.68);
+        text(songsList.get(mostPlayedSongs[0]) + " times!", width/2, height/2.36);
+      } else text(mostPlayedSongs[0].substring(0, 31) + "...\n" + songsList.get(mostPlayedSongs[0]) + " times!", width/2, height/2.55);
       if (mouseHover!=6)text("MORE", width/2, height/2.03);
       else text("MORE", width/2, height/2.02);
 
@@ -109,38 +115,33 @@ void draw() {
         mouseHover = 8;
       } else rect(width/2, height/1.05, width/6, height/17, 20);
 
+      //Up arrows
+      if (page==0) tint(70);
       if (mouseY > height/4.4 && mouseX > width/1.17 && mouseY < height/3.4 && page!=0) {
-        rect(width/1.11, height/3.85, width/14, width/14, 15);
+        image(up,width/1.11, height/3.85, width/16,width/16);
         mouseHover = 9;
-      } else rect(width/1.11, height/3.85, width/16, width/16, 15);
+      } else image(up,width/1.11, height/3.85, width/18,width/18);
       if (mouseY > height/3.4 && mouseX > width/1.17 && mouseY < height/3 && page!=0) {
-        rect(width/1.11, height/3.17, width/14, width/14, 15);
+        image(up2,width/1.11, height/3.16, width/16,width/16);
         mouseHover = 12;
-      } else rect(width/1.11, height/3.17, width/16, width/16, 15);
+      } else image(up2,width/1.11, height/3.16, width/18,width/18);
+      noTint();
 
+      //Down arrows
+      if (page==lastPage) tint(70);
       if (mouseY > height/1.18 && mouseX > width/1.17 && mouseY < height/1.08 && page!=lastPage) {
-        rect(width/1.11, height/1.151, width/14, width/14, 15);
+        image(down,width/1.11, height/1.15, width/16,width/16);
         mouseHover = 10;
-      } else rect(width/1.11, height/1.151, width/16, width/16, 15);
+      } else image(down,width/1.11, height/1.15, width/18,width/18);
       if (mouseY > height/1.3 && mouseX > width/1.17 && mouseY < height/1.18 && page!=lastPage) {
-        rect(width/1.11, height/1.23, width/14, width/14, 15);
+        image(down2,width/1.11, height/1.23, width/16,width/16);
         mouseHover = 11;
-      } else rect(width/1.11, height/1.23, width/16, width/16, 15);
+      } else image(down2,width/1.11, height/1.23, width/18,width/18);
+      noTint();
 
-      fill(50);
+      fill(255);
       text("BACK", width/2, height/1.054);
       text((page+1)+"/"+(lastPage+1), width/1.31, height/1.1);
-
-      if (page==0) fill(#258929);
-      text("^", width/1.11, height/3.8);
-      text("^", width/1.11, height/3.08);
-      text("^", width/1.11, height/3.23);
-
-      if (page!=lastPage) fill(50);
-      else fill(#258929);
-      text("v", width/1.11, height/1.16);
-      text("v", width/1.11, height/1.225);
-      text("v", width/1.11, height/1.25);
 
       //Time stats -------------------------------------
     } else if (screen == 2) {
@@ -159,30 +160,32 @@ void draw() {
 
 
 
-      fill(50);
-      stroke(20);
-      line(width/7, height/1.35, width/7*5/(monthKeys.length-1)*(monthKeys.length-1)+width/7, height/1.35);
+      fill(255);
+      stroke(255);
+      line(width/7, height/1.32, width/7*5/(monthKeys.length-1)*(monthKeys.length-1)+width/7, height/1.32);
       textSize(15);
       for (int i = 0; i < monthKeys.length; i++) {
         stroke(#1ed760, 200);
-        if (i!=monthKeys.length-1)line(width/7*5/(monthKeys.length-1)*i+width/7, height/1.35-map(monthList.get(monthKeys[i]), 0, monthMax, 5, height/5.6), width/7*5/(monthKeys.length-1)*(i+1)+width/7, height/1.35-map(monthList.get(monthKeys[i+1]), 0, monthMax, 5, height/5.6));
-        stroke(50);
-        line(width/7*5/(monthKeys.length-1)*i+width/7, height/1.36, width/7*5/(monthKeys.length-1)*i+width/7, height/1.34);
-        text(months[int(monthKeys[i].substring(5, 7))].substring(0,3), width/7*5/(monthKeys.length-1)*i+width/7, height/1.32);
-        circle(width/7*5/(monthKeys.length-1)*i+width/7, height/1.35-map(monthList.get(monthKeys[i]), 0, monthMax, 5, height/5.6), 5);
-        text(monthList.get(monthKeys[i]), width/7*5/(monthKeys.length-1)*i+width/7, height/1.35-map(monthList.get(monthKeys[i]), 0, monthMax, 5, height/5.6)-15);
+        if (i!=monthKeys.length-1)line(width/7*5/(monthKeys.length-1)*i+width/7, height/1.33-map(monthList.get(monthKeys[i]), 0, monthMax, 5, height/5.6), width/7*5/(monthKeys.length-1)*(i+1)+width/7, height/1.33-map(monthList.get(monthKeys[i+1]), 0, monthMax, 5, height/5.6));
+        stroke(255);
+        line(width/7*5/(monthKeys.length-1)*i+width/7, height/1.325, width/7*5/(monthKeys.length-1)*i+width/7, height/1.315);
+        text(months[int(monthKeys[i].substring(5, 7))].substring(0, 3), width/7*5/(monthKeys.length-1)*i+width/7, height/1.29);
+        circle(width/7*5/(monthKeys.length-1)*i+width/7, height/1.33-map(monthList.get(monthKeys[i]), 0, monthMax, 5, height/5.6), 5);
+        text(monthList.get(monthKeys[i]), width/7*5/(monthKeys.length-1)*i+width/7, height/1.33-map(monthList.get(monthKeys[i]), 0, monthMax, 5, height/5.6)-15);
       }
       noStroke();
       textSize(25);
 
-      if(mouseY>height/1.9 && mouseY < height/1.2 && mouseX > width/7 && mouseX < width/7*6){
-        monthHovered = round(map(mouseX,width/7,width/7*6,0,monthKeys.length-1));
+      if (mouseY>height/1.9 && mouseY < height/1.2 && mouseX > width/7 && mouseX < width/7*6) {
+        monthHovered = round(map(mouseX, width/7, width/7*6, 0, monthKeys.length-1));
       } else monthHovered = -1;
 
-      if(monthHovered!=-1)text(timePerMonth[monthHovered]/1000/60+" minutes in "+months[int(monthKeys[monthHovered].substring(5,7))]+" "+monthKeys[monthHovered].substring(0,4), width/2,height/1.2);
-      else text("Hover over a month for more info!", width/2,height/1.2);
+      if (monthHovered!=-1)text(timePerMonth[monthHovered]/1000/60+" minutes in "+months[int(monthKeys[monthHovered].substring(5, 7))]+" "+monthKeys[monthHovered].substring(0, 4), width/2, height/1.18);
+      else text("Hover over a month for more info!", width/2, height/1.2);
       text("Total listening time:", width/2, height/4.02);
-      text(totalListenTime+" minutes\n"+ nf(totalListenTime/60f, 0, 1)+" hours\n"+nf(totalListenTime/60/24f, 0, 1)+" days", width/2, height/2.8);
+      text(totalListenTime+" minutes", width/2, height/3.2);
+      text(nf(totalListenTime/60f, 0, 1)+" hours", width/2, height/2.8);
+      text(nf(totalListenTime/60/24f, 0, 1)+" days", width/2, height/2.48);
       text("Songs listened to per month:", width/2, height/2.02);
 
       text("BACK", width/2, height/1.054);
@@ -215,7 +218,7 @@ void drawSongBox(float h, int p) {
   rect(width/2.45, h, width/1.8, height/10, 20, 0, 0, 20);
   fill(#1ed760, 90);
   rect(width/1.3, h, width/6, height/10, 0, 20, 20, 0);
-  fill(50);
+  fill(255);
   if (mostPlayedSongs[p+6*page].length()<23)text(mostPlayedSongs[p+6*page], width/2.45, h-10);
   else text(mostPlayedSongs[p+6*page].substring(0, 21)+"...", width/2.45, h-10);
   textSize(15);
@@ -236,8 +239,9 @@ void drawDateButtons(int x) {
     rect(width/5*3.35, height/6.5, width/10, height/17, 10);
     rect(width/5*4.1, height/6.5, width/6, height/17, 10);
     mouseHover=1;
-    fill(50);
-    text(tempText, width/5*1.6, height/6.6);
+    fill(255);
+    if(selected == 1)text(tempText, width/5*1.6, height/6.6);
+    else text(nf(m1, 2, 0), width/5*1.6, height/6.6);
     text(nf(y1, 2, 0), width/5*2.35, height/6.6);
     text(nf(m2, 2, 0), width/5*3.35, height/6.6);
     text(nf(y2, 2, 0), width/5*4.1, height/6.6);
@@ -250,9 +254,10 @@ void drawDateButtons(int x) {
     rect(width/5*3.35, height/6.5, width/10, height/17, 10);
     rect(width/5*4.1, height/6.5, width/6, height/17, 10);
     mouseHover=2;
-    fill(50);
+    fill(255);
     text(nf(m1, 2, 0), width/5*1.6, height/6.6);
-    text(tempText, width/5*2.35, height/6.6);
+    if(selected == 2)text(tempText, width/5*2.35, height/6.6);
+    else text(nf(y1, 2, 0), width/5*2.35, height/6.6);
     text(nf(m2, 2, 0), width/5*3.35, height/6.6);
     text(nf(y2, 2, 0), width/5*4.1, height/6.6);
     break;
@@ -264,10 +269,11 @@ void drawDateButtons(int x) {
     rect(width/5*2.35, height/6.5, width/6, height/17, 10);
     rect(width/5*4.1, height/6.5, width/6, height/17, 10);
     mouseHover=3;
-    fill(50);
+    fill(255);
     text(nf(m1, 2, 0), width/5*1.6, height/6.6);
     text(nf(y1, 2, 0), width/5*2.35, height/6.6);
-    text(tempText, width/5*3.35, height/6.6);
+    if(selected == 3)text(tempText, width/5*3.35, height/6.6);
+    else text(nf(m2, 2, 0), width/5*3.35, height/6.6);
     text(nf(y2, 2, 0), width/5*4.1, height/6.6);
     break;
   case 4:
@@ -278,11 +284,12 @@ void drawDateButtons(int x) {
     rect(width/5*2.35, height/6.5, width/6, height/17, 10);
     rect(width/5*3.35, height/6.5, width/10, height/17, 10);
     mouseHover=4;
-    fill(50);
+    fill(255);
     text(nf(m1, 2, 0), width/5*1.6, height/6.6);
     text(nf(y1, 2, 0), width/5*2.35, height/6.6);
     text(nf(m2, 2, 0), width/5*3.35, height/6.6);
-    text(tempText, width/5*4.1, height/6.6);
+    if(selected == 4)text(tempText, width/5*4.1, height/6.6);
+    else text(nf(y2, 2, 0), width/5*4.1, height/6.6);
     break;
   case 5:
     fill(#1ed760, 100);
@@ -291,7 +298,7 @@ void drawDateButtons(int x) {
     rect(width/5*3.35, height/6.5, width/10, height/17, 10);
     rect(width/5*4.1, height/6.5, width/6, height/17, 10);
     mouseHover=0;
-    fill(50);
+    fill(255);
     text(nf(m1, 2, 0), width/5*1.6, height/6.6);
     text(nf(y1, 2, 0), width/5*2.35, height/6.6);
     text(nf(m2, 2, 0), width/5*3.35, height/6.6);
@@ -306,35 +313,36 @@ void mousePressed() {
     if (selected!=0) {
       switch(selected) {
       case 1:
-        m1=int(tempText);
+        if(int(tempText) > 0 && int(tempText) < 13)m1=int(tempText);
         break;
       case 2:
-        y1=int(tempText);
+        if(int(tempText) > 2000 && int(tempText) <= year())y1=int(tempText);
         break;
       case 3:
-        m2=int(tempText);
+        if(int(tempText) > 0 && int(tempText) < 13)m2=int(tempText);
         break;
       case 4:
-        y2=int(tempText);
+        if(int(tempText) > 2000 && int(tempText) <= year())y2=int(tempText);
         break;
       }
       tempText = "";
     }
+    if (mouseHover == 2 || mouseHover == 4)tempText="20";
     selected=mouseHover;
   } else if (mouseHover <= 0) {
     if (selected!=0) {
       switch(selected) {
       case 1:
-        m1=int(tempText);
+        if(int(tempText) > 0 && int(tempText) < 13)m1=int(tempText);
         break;
       case 2:
-        y1=int(tempText);
+        if(int(tempText) > 2000 && int(tempText) <= year())y1=int(tempText);
         break;
       case 3:
-        m2=int(tempText);
+        if(int(tempText) > 0 && int(tempText) < 13)m2=int(tempText);
         break;
       case 4:
-        y2=int(tempText);
+        if(int(tempText) > 2000 && int(tempText) <= year())y2=int(tempText);
         break;
       }
       tempText = "";
@@ -344,16 +352,16 @@ void mousePressed() {
     if (selected!=0) {
       switch(selected) {
       case 1:
-        m1=int(tempText);
+        if(int(tempText) > 0 && int(tempText) < 13)m1=int(tempText);
         break;
       case 2:
-        y1=int(tempText);
+        if(int(tempText) > 2000 && int(tempText) <= year())y1=int(tempText);
         break;
       case 3:
-        m2=int(tempText);
+        if(int(tempText) > 0 && int(tempText) < 13)m2=int(tempText);
         break;
       case 4:
-        y2=int(tempText);
+        if(int(tempText) > 2000 && int(tempText) <= year())y2=int(tempText);
         break;
       }
       tempText = "";
@@ -378,7 +386,9 @@ void mousePressed() {
 
 // KEY PRESSED ----------------------------------------------------------------------------
 void keyPressed() {
-  if (selected > 0 && key >= 48 && keyCode <= 57 && tempText.length() < maxLength())tempText+=key;
+  if (selected > 0 && key >= 48 && keyCode <= 57 && tempText.length() < maxLength()) {
+    tempText+=key;
+  }
 }
 
 int maxLength () {
@@ -426,7 +436,7 @@ void loadStats(int a, int b, int c, int d) {
   for (int i = start; i <= end; i++) {
     song = listenHistory.getJSONObject(i);
     totalListenTime += song.getInt("msPlayed");
-    timeSpentList.add(song.getString("endTime").substring(0, 7),song.getInt("msPlayed"));
+    timeSpentList.add(song.getString("endTime").substring(0, 7), song.getInt("msPlayed"));
     if (song.getInt("msPlayed")>5000) {
       timesList.add(song.getString("endTime").substring(11, 13), 1);
       songsList.add(song.getString("trackName"), 1);
@@ -447,7 +457,6 @@ void loadStats(int a, int b, int c, int d) {
   monthKeys = monthList.keyArray();
   monthMax = max(monthList.valueArray());
   timePerMonth = timeSpentList.valueArray();
-  println(monthKeys);
 
   loaded = true;
 }
